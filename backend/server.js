@@ -21,3 +21,4 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/notes', notesRoutes);
+export default app;
