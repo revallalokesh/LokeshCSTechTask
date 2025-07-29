@@ -72,7 +72,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
           <img
-            src={"../../public/images/icon.png"}
+            src={"/images/icon.png"}
             alt="App Logo"
             className="w-10 h-10"
           />
