@@ -13,7 +13,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/user", {
+        const res = await axios.get("https://mnaotp.onrender.com/api/user", {
           withCredentials: true,
         });
         setUser(res.data.user);
@@ -28,7 +28,7 @@ const Dashboard = () => {
   }, [navigate]);
 
   const handleLogout = async () => {
-    await axios.post("http://localhost:5000/api/auth/logout", {}, { withCredentials: true });
+    await axios.post("https://mnaotp.onrender.com/api/auth/logout", {}, { withCredentials: true });
     navigate("/");
   };
 
@@ -36,13 +36,13 @@ const Dashboard = () => {
     try {
       setLoading(true);
       await axios.post(
-        "http://localhost:5000/api/notes",
+        "https://mnaotp.onrender.com/api/notes",
         { content: noteInput },
         { withCredentials: true }
       );
       setNoteInput("");
       // Fetch updated notes
-      const notesRes = await axios.get("http://localhost:5000/api/user", {
+      const notesRes = await axios.get("https://mnaotp.onrender.com/api/user", {
         withCredentials: true,
       });
       setNotes(notesRes.data.notes || []);
@@ -55,7 +55,7 @@ const Dashboard = () => {
 
   const handleDeleteNote = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/notes/${id}`, {
+      await axios.delete(`https://mnaotp.onrender.com/api/notes/${id}`, {
         withCredentials: true,
       });
 

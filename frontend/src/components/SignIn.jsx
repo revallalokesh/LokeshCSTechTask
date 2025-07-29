@@ -30,7 +30,7 @@ const SignIn = () => {
     setError("");
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/send-otp",
+        "https://mnaotp.onrender.com/api/auth/send-otp",
         { email: form.email },
         { withCredentials: true }
       );
@@ -55,7 +55,7 @@ const SignIn = () => {
     }
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/signin", {
+      const response = await axios.post("https://mnaotp.onrender.com/api/auth/signin", {
         ...form,
         keepLoggedIn,
       }, {

@@ -39,7 +39,7 @@ const SignUp = () => {
     setLoading(true);
     try {
       await axios.post(
-        "http://localhost:5000/api/auth/send-otp",
+        "https://mnaotp.onrender.com/api/auth/send-otp",
         { email: form.email },
         { withCredentials: true }
       );
@@ -55,7 +55,7 @@ const SignUp = () => {
     if (!validateForm()) return;
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/signup", form, {
+      const response = await axios.post("https://mnaotp.onrender.com/api/auth/signup", form, {
         withCredentials: true,
       });
       localStorage.setItem("token", response.data.token); // JWT token for authentication
