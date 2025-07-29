@@ -21,4 +21,8 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/notes', notesRoutes);
-export default app;
+app.get('/', (req, res) => {
+    res.send('API is running...');
+  });
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
