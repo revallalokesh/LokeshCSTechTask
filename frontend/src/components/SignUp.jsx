@@ -76,7 +76,7 @@ const SignUp = () => {
       <div className="w-1/2 flex flex-col bg-white p-6 md:p-8">
         <div className="flex items-center gap-2 mb-6">
           <img
-            src={"../../src/images/icon.png"}
+            src={"../../public/images/icon.png"}
             alt="App Logo"
             className="w-10 h-10"
           />
@@ -192,7 +192,7 @@ const SignUp = () => {
       {/* Right: Image */}
       <div className="w-1/2 hidden md:block">
         <img
-          src={"../../src/images/right-column.png"}
+          src={"../../public/images/right-column.png"}
           alt="Right Image"
           className="w-full h-full object-cover"
         />
