@@ -14,9 +14,6 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:5173',
-    'http://localhost:3000',
-    'https://lokesh-cs-tech-task.vercel.app',
-    'https://lokeshcstechtask.onrender.com'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -26,11 +23,28 @@ app.use(cors({
 app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.error('MongoDB Error:', err));
+  .then(() => {
+    console.log('MongoDB Connected Successfully');
+    console.log('Database URL:', process.env.MONGO_URI);
+  })
+  .catch(err => {
+    console.error('MongoDB Connection Error:', err);
+    console.error('Database URL:', process.env.MONGO_URI);
+  });
 
 app.use('/api/auth', authRoutes);
 app.use('/api/agents', agentRoutes);
+
+// Debug route to check environment variables
+app.get('/debug', (req, res) => {
+  res.json({
+    mongoUri: process.env.MONGO_URI ? 'Set' : 'Not set',
+    jwtSecret: process.env.JWT_SECRET ? 'Set' : 'Not set',
+    port: process.env.PORT,
+    nodeEnv: process.env.NODE_ENV
+  });
+});
+
 
 app.get('/', (req, res) => {
   res.send('API is running...');

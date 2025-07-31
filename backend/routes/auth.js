@@ -30,23 +30,41 @@ router.post('/register', async (req, res) => {
 // Login user
 router.post('/login', async (req, res) => {
   try {
+    console.log('Login attempt:', req.body);
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      console.log('Missing email or password');
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: 'Invalid email or password' });
-    console.log('Comparing password:', password, 'with hash:', user.passwordHash);
+    console.log('User found:', user ? 'Yes' : 'No');
+    
+    if (!user) {
+      console.log('No user found with email:', email);
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    console.log('Comparing password with hash:', user.passwordHash ? 'Hash exists' : 'No hash');
     const isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch) return res.status(400).json({ error: 'Invalid email or password' });
-    console.log('JWT_SECRET:', process.env.JWT_SECRET); // Add this before jwt.sign
+    console.log('Password match:', isMatch);
+
+    if (!isMatch) {
+      console.log('Password does not match');
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: '6h' }
     );
 
+    console.log('Login successful, token generated');
     res.json({ token });
   } catch (err) {
-    console.error(err.message);
+    console.error('Login error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -73,6 +91,17 @@ router.post('/create-admin', async (req, res) => {
     res.status(201).json({ message: 'Admin user created successfully' });
   } catch (err) {
     console.error('Error creating admin:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Temporary endpoint to list all users (REMOVE AFTER DEBUGGING)
+router.get('/list-users', async (req, res) => {
+  try {
+    const users = await User.find({}, { email: 1, _id: 1 });
+    res.json({ users });
+  } catch (err) {
+    console.error('Error listing users:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
