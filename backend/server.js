@@ -35,15 +35,6 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/agents', agentRoutes);
 
-// Debug route to check environment variables
-app.get('/debug', (req, res) => {
-  res.json({
-    mongoUri: process.env.MONGO_URI ? 'Set' : 'Not set',
-    jwtSecret: process.env.JWT_SECRET ? 'Set' : 'Not set',
-    port: process.env.PORT,
-    nodeEnv: process.env.NODE_ENV
-  });
-});
 
 
 app.get('/', (req, res) => {
