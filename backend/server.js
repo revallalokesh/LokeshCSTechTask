@@ -12,7 +12,7 @@ const app = express();
 
 // Configure CORS with credentials support
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite default port
+  origin: 'https://lokesh-cs-tech-task.vercel.app', // Vite default port
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
