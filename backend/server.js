@@ -13,7 +13,7 @@ const app = express();
 // Configure CORS with credentials support
 app.use(cors({
   origin: [
-    'http://localhost:5173',
+    'https://lokesh-cs-tech-task.vercel.app',
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
