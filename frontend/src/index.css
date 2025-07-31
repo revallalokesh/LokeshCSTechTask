@@ -2,16 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Optional: Custom animation */
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
+.input {
+  @apply block w-full mb-3 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+.btn {
+  @apply bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+.btn-red {
+  @apply bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500;
+}
+
+/* Mobile responsive improvements */
+@media (max-width: 768px) {
+  .input {
+    @apply text-base;
   }
-  to {
-    transform: rotate(360deg);
+  
+  .btn {
+    @apply w-full text-base py-3;
+  }
+  
+  .btn-red {
+    @apply w-full text-base py-2;
   }
 }
 
-.animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
+/* Better form spacing on mobile */
+@media (max-width: 640px) {
+  .input {
+    @apply mb-4;
+  }
 }

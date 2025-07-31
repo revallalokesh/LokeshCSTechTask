@@ -1,19 +1,13 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import SignIn from './components/SignIn';
-import SignUp from './components/SignUp';
-import Dashboard from './components/Dashboard';
+import React, { useState } from 'react';
+import Login from './components/Login.jsx';
+import Dashboard from './components/Dashboard.jsx';
+import { setToken } from './api.js';
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/dashboard" element={<Dashboard/>} /> 
-      </Routes>
-    </Router>
-  );
+export default function App(){
+  const [token,setTok] = useState(localStorage.getItem('token'));
+  if (token) setToken(token);
+
+  return token
+    ? <Dashboard onLogout={() => { localStorage.removeItem('token'); setTok(null); }} />
+    : <Login onLogin={(tok) => { localStorage.setItem('token',tok); setTok(tok); }} />;
 }
-
-export default App;

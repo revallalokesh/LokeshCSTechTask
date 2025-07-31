@@ -1,151 +1,151 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import React,{useEffect,useState} from 'react';
+import API from '../api.js';
+import AddAgent from './AddAgent.jsx';
+import UploadList from './UploadList.jsx';
 
-const Dashboard = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState({ name: "", email: "" });
-  const [notes, setNotes] = useState([]);
-  const [noteInput, setNoteInput] = useState("");
-  const [loading, setLoading] = useState(false);
+export default function Dashboard({ onLogout }){
+  const [agents,setAgents] = useState([]);
+  const [editingAgent, setEditingAgent] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [reassignLoading, setReassignLoading] = useState(false);
+  const [reassignMessage, setReassignMessage] = useState('');
+  
+  const fetch = async()=>{ const { data } = await API.get('/agents/list-agents'); setAgents(data.agents); };
+  useEffect(()=>{ fetch(); }, []);
 
-  // Fetch user and notes
+  // Debug editingAgent state changes
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get("https://mnaotp.onrender.com/api/user", {
-          withCredentials: true,
-        });
-        setUser(res.data.user);
-        setNotes(res.data.notes || []);
-      } catch (error) {
-        console.error("Redirecting to login:", error);
-        navigate("/signin");
-      }
-    };
+    console.log('Dashboard - editingAgent changed:', editingAgent);
+  }, [editingAgent]);
 
-    fetchData();
-  }, [navigate]);
-
-  const handleLogout = async () => {
-    await axios.post("https://mnaotp.onrender.com/api/auth/logout", {}, { withCredentials: true });
-    navigate("/");
+  const handleEdit = (agent) => {
+    console.log('Edit button clicked for agent:', agent);
+    setEditingAgent(agent);
   };
 
-  const handleAddNote = async () => {
+  const handleCancelEdit = () => {
+    console.log('Cancel edit clicked');
+    setEditingAgent(null);
+  };
+
+  const handleDelete = async (agentId) => {
     try {
-      setLoading(true);
-      await axios.post(
-        "https://mnaotp.onrender.com/api/notes",
-        { content: noteInput },
-        { withCredentials: true }
-      );
-      setNoteInput("");
-      // Fetch updated notes
-      const notesRes = await axios.get("https://mnaotp.onrender.com/api/user", {
-        withCredentials: true,
-      });
-      setNotes(notesRes.data.notes || []);
-    } catch (error) {
-      console.error("Error adding note:", error);
-    } finally {
-      setLoading(false);
+      await API.delete(`/agents/delete-agent/${agentId}`);
+      fetch();
+      setShowDeleteConfirm(null);
+    } catch (err) {
+      console.error('Delete error:', err);
     }
   };
 
-  const handleDeleteNote = async (id) => {
+  const handleReassignTasks = async () => {
     try {
-      await axios.delete(`https://mnaotp.onrender.com/api/notes/${id}`, {
-        withCredentials: true,
-      });
-
-      setNotes((prevNotes) => prevNotes.filter((note) => note._id !== id));
-    } catch (error) {
-      console.error("Error deleting note:", error);
+      setReassignLoading(true);
+      setReassignMessage('');
+      const response = await API.post('/agents/reassign-tasks');
+      await fetch();
+      setReassignMessage(response.data.message || 'Tasks reassigned successfully!');
+      setTimeout(() => setReassignMessage(''), 3000);
+    } catch (err) {
+      console.error('Reassign error:', err);
+      setReassignMessage(err.response?.data?.error || 'Failed to reassign tasks');
+      setTimeout(() => setReassignMessage(''), 5000);
+    } finally {
+      setReassignLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-md">
-        {/* Logo and Heading */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-          <img
-            src={"/images/icon.png"}
-            alt="App Logo"
-            className="w-10 h-10"
-          />
-            <h1 className="ml-10 text-xl font-bold text-gray-800">Dashboard</h1>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="text-blue-600 text-sm font-medium  hover:underline"
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl">Dashboard</h1>
+          <button onClick={onLogout} className="btn-red">Logout</button>
+        </div>
+        <AddAgent onAdded={fetch} editingAgent={editingAgent} onCancelEdit={handleCancelEdit}/>
+        <UploadList onUploaded={fetch}/>
+        
+        {/* Task Reassignment Section */}
+        <div className="bg-white rounded p-4 shadow sm:mb-4">
+          <h3 className="text-xl mb-3">Task Management</h3>
+          {reassignMessage && (
+            <div className={`mb-3 p-2 rounded ${reassignMessage.includes('error') || reassignMessage.includes('Failed') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+              {reassignMessage}
+            </div>
+          )}
+          <button 
+            onClick={handleReassignTasks}
+            disabled={reassignLoading}
+            className={`bg-green-600 text-white px-4 py-2 rounded ${reassignLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}`}
           >
-            Sign Out
+            {reassignLoading ? 'Reassigning...' : 'Reassign All Tasks'}
           </button>
+          <p className="text-sm text-gray-600 mt-2">
+            Redistribute all tasks equally among current agents
+          </p>
         </div>
-
-        {/* Welcome Message */}
-        <div className="mb-4 text-center">
-          <p className="text-lg font-bold">Welcome, {user.name}!</p>
-          <p className="text-gray-600 text-sm mt-1">Email: {user.email}</p>
-        </div>
-
-        {/* Input */}
-        <div className="flex mb-4">
-          <input
-            type="text"
-            value={noteInput}
-            onChange={(e) => setNoteInput(e.target.value)}
-            placeholder="Write a new note..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-          <button
-            onClick={handleAddNote}
-            disabled={loading}
-            className="px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 transition"
-          >
-            {loading ? "Adding..." : "Add"}
-          </button>
-        </div>
-
-        {/* Notes List */}
+        
         <div>
-          {notes.length === 0 ? (
-            <p className="text-gray-500 text-sm">No notes yet.</p>
-          ) : (
-            notes.map((note) =>
-              note && note._id ? (
-                <div
-                  key={note._id}
-                  className="flex justify-between items-center bg-white border rounded-md shadow-sm px-4 py-2 mb-2"
-                >
-                  <span className="text-sm font-medium">{note.content}</span>
-                  <button onClick={() => handleDeleteNote(note._id)}>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-black hover:text-black transition"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V4a1 1 0 011-1h6a1 1 0 011 1v3"
-                      />
-                    </svg>
+          <h3 className="text-xl mt-6 mb-3">Agents & Tasks ({agents.length} agents)</h3>
+          {agents.length === 0 && (
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+              No agents found. Please add at least one agent before uploading tasks.
+            </div>
+          )}
+          {agents.map(a => (
+            <div key={a._id} className="bg-white rounded p-4 shadow mb-3">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h4 className="font-semibold">{a.name} ({a.email})</h4>
+                  <p className="text-sm text-gray-600">Mobile: {a.mobileWithCountry}</p>
+                  <p className="text-sm text-gray-600 mb-2">Tasks: {a.assignedTasks?.length || 0}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => handleEdit(a)} 
+                    className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    onClick={() => setShowDeleteConfirm(a._id)} 
+                    className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                  >
+                    Delete
                   </button>
                 </div>
-              ) : null
-            )
-          )}
+              </div>
+              
+              {showDeleteConfirm === a._id && (
+                <div className="bg-red-50 border border-red-200 rounded p-3 mb-3">
+                  <p className="text-red-700 mb-2">Are you sure you want to delete this agent?</p>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleDelete(a._id)}
+                      className="bg-red-600 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Yes, Delete
+                    </button>
+                    <button 
+                      onClick={() => setShowDeleteConfirm(null)}
+                      className="bg-gray-500 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              <ul className="list-disc ml-5 mt-2">
+                {(a.assignedTasks?.length > 0)
+                  ? a.assignedTasks.map((t,i)=>(
+                      <li key={i}>{t.firstName} – {t.phone} – {t.notes}</li> ))
+                  : <li className="text-gray-500">No tasks assigned</li>}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}

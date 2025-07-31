@@ -1,14 +1,9 @@
+// models/User.js
 import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema({
-  name: String,
-  email: { type: String, unique: true },
-  dob: String,
-  otp: String,
-  googleAuth: { type: Boolean, default: false }
+const UserSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  passwordHash: { type: String, required: true }
 });
 
-const User = mongoose.model("User", userSchema);
-export default User;
-
-
+export default mongoose.model('User', UserSchema);
