@@ -27,6 +27,11 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/agents', agentRoutes);
 
+app.get('/', (req, res) => {
+  res.send('API is running...');
+});
+
+
 app.listen(process.env.PORT, () => {
   console.log('Server listening', process.env.PORT);
 });
