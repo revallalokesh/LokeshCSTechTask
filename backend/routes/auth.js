@@ -51,4 +51,30 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Temporary endpoint to create admin user (REMOVE AFTER CREATING ADMIN)
+router.post('/create-admin', async (req, res) => {
+  try {
+    // Check if admin already exists
+    const existingAdmin = await User.findOne({ email: 'admin@example.com' });
+    if (existingAdmin) {
+      return res.status(400).json({ error: 'Admin user already exists' });
+    }
+
+    // Create admin user
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash('admin123', salt);
+
+    const adminUser = new User({
+      email: 'admin@example.com',
+      passwordHash: passwordHash
+    });
+
+    await adminUser.save();
+    res.status(201).json({ message: 'Admin user created successfully' });
+  } catch (err) {
+    console.error('Error creating admin:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
