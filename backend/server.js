@@ -9,7 +9,15 @@ import agentRoutes from './routes/agents.js';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// Configure CORS with credentials support
+app.use(cors({
+  origin: 'http://localhost:5173', // Vite default port
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI)
