@@ -9,11 +9,11 @@ import agentRoutes from './routes/agents.js';
 dotenv.config();
 
 const app = express();
-
+// https://lokesh-cs-tech-task.vercel.app
 // Configure CORS with credentials support
 app.use(cors({
   origin: [
-    'https://lokesh-cs-tech-task.vercel.app',
+    'http://localhost:5173',
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

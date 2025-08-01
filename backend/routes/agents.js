@@ -32,42 +32,63 @@ router.post('/add-agent', async (req, res) => {
 
 router.post('/upload-list', upload.single('file'), async (req,res)=>{
   try {
+    console.log('Upload request received');
+    console.log('Request headers:', req.headers);
+    console.log('Request body keys:', Object.keys(req.body));
+    console.log('Request file:', req.file ? 'File exists' : 'No file');
+    
     if (!req.file) {
+      console.log('No file uploaded');
       return res.status(400).json({ error: 'No file uploaded' });
     }
     
+    console.log('File details:', {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    });
+    
     const buffer = req.file.buffer;
+    console.log('Buffer size:', buffer.length);
+    
     parse(buffer, { columns:true, trim:true }, async (err, rows)=>{
       if (err) {
         console.error('CSV parse error:', err);
         return res.status(400).json({ error: 'Invalid CSV format. Please check your file structure.' });
       }
       
+      console.log('Parsed rows:', rows ? rows.length : 0);
+      
       if (!rows || rows.length === 0) {
+        console.log('No rows found in CSV');
         return res.status(400).json({ error: 'CSV file is empty or has no valid data.' });
       }
       
       // Validate CSV structure
       const firstRow = rows[0];
+      console.log('First row:', firstRow);
+      console.log('Required columns check:', {
+        FirstName: !!firstRow.FirstName,
+        Phone: !!firstRow.Phone,
+        Notes: !!firstRow.Notes
+      });
+      
       if (!firstRow.FirstName || !firstRow.Phone || !firstRow.Notes) {
+        console.log('Missing required columns');
         return res.status(400).json({ error: 'CSV must have columns: FirstName, Phone, Notes' });
       }
       
       const records = rows.map(r=>({ firstName:r.FirstName, phone:r.Phone, notes:r.Notes }));
       const agents = await Agent.find();
       
+      console.log('Found agents:', agents.length);
+      
       if (agents.length === 0) {
+        console.log('No agents found');
         return res.status(400).json({ error:'No agents found. Please add agents first.' });
       }
       
       console.log(`Distributing ${records.length} tasks among ${agents.length} agents`);
-      
-      // Calculate distribution
-      const per = Math.floor(records.length / agents.length);
-      let extra = records.length % agents.length;
-      let idx = 0;
-      
-      console.log(`Base tasks per agent: ${per}, Extra tasks: ${extra}`);
       
       // Clear existing tasks first
       for (const agent of agents) {
@@ -75,26 +96,44 @@ router.post('/upload-list', upload.single('file'), async (req,res)=>{
         await agent.save();
       }
       
-      // Distribute tasks
+      // Calculate distribution
+      const totalTasks = records.length;
+      const totalAgents = agents.length;
+      const baseTasksPerAgent = Math.floor(totalTasks / totalAgents);
+      const extraTasks = totalTasks % totalAgents;
+      
+      console.log(`Total tasks: ${totalTasks}, Total agents: ${totalAgents}`);
+      console.log(`Base tasks per agent: ${baseTasksPerAgent}, Extra tasks: ${extraTasks}`);
+      
+      let taskIndex = 0;
+      
+      // Distribute tasks equally
       for (let i = 0; i < agents.length; i++) {
         const agent = agents[i];
-        const tasksForThisAgent = per + (extra > 0 ? 1 : 0);
-        const slice = records.slice(idx, idx + tasksForThisAgent);
         
+        // Calculate tasks for this agent
+        // First 'extraTasks' agents get one extra task
+        const tasksForThisAgent = baseTasksPerAgent + (i < extraTasks ? 1 : 0);
+        
+        // Get the slice of tasks for this agent
+        const slice = records.slice(taskIndex, taskIndex + tasksForThisAgent);
+        
+        // Assign tasks to agent
         agent.assignedTasks = slice;
         await agent.save();
         
-        console.log(`Agent ${agent.name}: ${slice.length} tasks`);
+        console.log(`Agent ${agent.name}: ${slice.length} tasks (${tasksForThisAgent} calculated)`);
         
-        idx += slice.length;
-        if (extra > 0) extra--;
+        // Move to next task index
+        taskIndex += tasksForThisAgent;
       }
       
       const updated = await Agent.find();
+      console.log('Upload completed successfully');
       res.json({ 
         success: true, 
         agents: updated, 
-        message: `Distributed ${records.length} tasks among ${agents.length} agents (${per} base + ${extra} extra)` 
+        message: `Distributed ${totalTasks} tasks among ${totalAgents} agents (${baseTasksPerAgent} base + ${extraTasks} extra)` 
       });
     });
   } catch (error) {
@@ -181,30 +220,51 @@ router.post('/reassign-tasks', async (req, res) => {
       return res.status(400).json({ error: 'No tasks to reassign' });
     }
 
+    console.log(`Reassigning ${allTasks.length} tasks among ${agents.length} agents`);
+
     // Clear all tasks from all agents
     for (const agent of agents) {
       agent.assignedTasks = [];
       await agent.save();
     }
 
-    // Redistribute tasks equally
-    const per = Math.floor(allTasks.length / agents.length);
-    let extra = allTasks.length % agents.length;
-    let idx = 0;
+    // Calculate distribution
+    const totalTasks = allTasks.length;
+    const totalAgents = agents.length;
+    const baseTasksPerAgent = Math.floor(totalTasks / totalAgents);
+    const extraTasks = totalTasks % totalAgents;
+    
+    console.log(`Total tasks: ${totalTasks}, Total agents: ${totalAgents}`);
+    console.log(`Base tasks per agent: ${baseTasksPerAgent}, Extra tasks: ${extraTasks}`);
+    
+    let taskIndex = 0;
 
-    for (const agent of agents) {
-      const slice = allTasks.slice(idx, idx + per + (extra > 0 ? 1 : 0));
+    // Redistribute tasks equally
+    for (let i = 0; i < agents.length; i++) {
+      const agent = agents[i];
+      
+      // Calculate tasks for this agent
+      // First 'extraTasks' agents get one extra task
+      const tasksForThisAgent = baseTasksPerAgent + (i < extraTasks ? 1 : 0);
+      
+      // Get the slice of tasks for this agent
+      const slice = allTasks.slice(taskIndex, taskIndex + tasksForThisAgent);
+      
+      // Assign tasks to agent
       agent.assignedTasks = slice;
       await agent.save();
-      idx += slice.length;
-      extra--;
+      
+      console.log(`Agent ${agent.name}: ${slice.length} tasks (${tasksForThisAgent} calculated)`);
+      
+      // Move to next task index
+      taskIndex += tasksForThisAgent;
     }
 
     const updated = await Agent.find();
     res.json({ 
       success: true, 
       agents: updated, 
-      message: `Reassigned ${allTasks.length} tasks among ${agents.length} agents` 
+      message: `Reassigned ${totalTasks} tasks among ${totalAgents} agents (${baseTasksPerAgent} base + ${extraTasks} extra)` 
     });
   } catch (err) {
     console.error('Reassign tasks error:', err);

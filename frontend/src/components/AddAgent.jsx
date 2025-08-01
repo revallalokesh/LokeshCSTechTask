@@ -1,13 +1,15 @@
-import React,{useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import API from '../api.js';
-export default function AddAgent({ onAdded, editingAgent, onCancelEdit }){
-  const [form,setForm] = useState({ 
+
+export default function AddAgent({ onAdded, editingAgent, onCancelEdit }) {
+  const [form, setForm] = useState({ 
     name: '', 
     email: '', 
     mobileWithCountry: '', 
     password: '' 
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // Update form when editingAgent changes
   useEffect(() => {
@@ -27,9 +29,13 @@ export default function AddAgent({ onAdded, editingAgent, onCancelEdit }){
     setError('');
   }, [editingAgent]);
 
-  const handle = async e=>{
+  const handle = async e => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+    
     console.log('Form submitted, editingAgent:', editingAgent, 'form:', form);
+    
     try {
       if (editingAgent) {
         // Update existing agent
@@ -45,13 +51,15 @@ export default function AddAgent({ onAdded, editingAgent, onCancelEdit }){
         console.log('Adding new agent');
         const response = await API.post('/agents/add-agent', form);
         console.log('Add response:', response);
-        setForm({ name:'',email:'',mobileWithCountry:'',password:'' });
+        setForm({ name: '', email: '', mobileWithCountry: '', password: '' });
       }
       onAdded();
       setError('');
     } catch (err) {
       console.error('Form submission error:', err);
       setError(err.response?.data?.error || 'Failed to save agent');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,14 +76,54 @@ export default function AddAgent({ onAdded, editingAgent, onCancelEdit }){
     <form onSubmit={handle} className="bg-white rounded p-4 shadow sm:mb-4">
       <h3 className="text-xl mb-3">{editingAgent ? 'Edit Agent' : 'Add Agent'}</h3>
       {error && <div className="text-red-600 mb-2">{error}</div>}
-      <input placeholder="Name" className="input" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required />
-      <input placeholder="Email" className="input" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required />
-      <input placeholder="Mobile (+country‑code)" className="input" value={form.mobileWithCountry} onChange={e=>setForm({...form,mobileWithCountry:e.target.value})} required />
-      <input type="password" placeholder={editingAgent ? "Password (leave blank to keep current)" : "Password"} className="input" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required={!editingAgent} />
+      <input 
+        placeholder="Name" 
+        className="input" 
+        value={form.name} 
+        onChange={e => setForm({...form, name: e.target.value})} 
+        required 
+        disabled={loading}
+      />
+      <input 
+        placeholder="Email" 
+        className="input" 
+        value={form.email} 
+        onChange={e => setForm({...form, email: e.target.value})} 
+        required 
+        disabled={loading}
+      />
+      <input 
+        placeholder="Mobile (+country‑code)" 
+        className="input" 
+        value={form.mobileWithCountry} 
+        onChange={e => setForm({...form, mobileWithCountry: e.target.value})} 
+        required 
+        disabled={loading}
+      />
+      <input 
+        type="password" 
+        placeholder={editingAgent ? "Password (leave blank to keep current)" : "Password"} 
+        className="input" 
+        value={form.password} 
+        onChange={e => setForm({...form, password: e.target.value})} 
+        required={!editingAgent} 
+        disabled={loading}
+      />
       <div className="flex gap-2">
-        <button type="submit" className="btn">{editingAgent ? 'Update Agent' : 'Add Agent'}</button>
+        <button 
+          type="submit" 
+          className="btn" 
+          disabled={loading}
+        >
+          {loading ? 'Saving...' : (editingAgent ? 'Update Agent' : 'Add Agent')}
+        </button>
         {editingAgent && (
-          <button type="button" onClick={handleCancel} className="bg-gray-500 text-white px-4 py-2 rounded">
+          <button 
+            type="button" 
+            onClick={handleCancel} 
+            className="bg-gray-500 text-white px-4 py-2 rounded"
+            disabled={loading}
+          >
             Cancel
           </button>
         )}
