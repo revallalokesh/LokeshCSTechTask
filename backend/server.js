@@ -9,16 +9,25 @@ import agentRoutes from './routes/agents.js';
 dotenv.config();
 
 const app = express();
-// https://lokesh-cs-tech-task.vercel.app
+
 // Configure CORS with credentials support
 app.use(cors({
   origin: [
+    'http://localhost:5173',
+    'http://localhost:3000',
     'https://lokesh-cs-tech-task.vercel.app',
+    'https://lokesh-cs-tech-task.vercel.app/',
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  next();
+});
 
 app.use(express.json());
 
@@ -35,12 +44,22 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/agents', agentRoutes);
 
-
-
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
+// Test endpoint to verify backend is working
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'Backend is working!',
+    timestamp: new Date().toISOString(),
+    env: {
+      hasMongoUri: !!process.env.MONGO_URI,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      port: process.env.PORT
+    }
+  });
+});
 
 app.listen(process.env.PORT, () => {
   console.log('Server listening', process.env.PORT);

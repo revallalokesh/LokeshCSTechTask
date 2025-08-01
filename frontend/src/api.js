@@ -49,4 +49,16 @@ export function setToken(token) {
   }
 }
 
+// Test function to verify API connectivity
+export async function testAPI() {
+  try {
+    const response = await API.get('/test');
+    console.log('API Test Response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('API Test Error:', error);
+    throw error;
+  }
+}
+
 export default API;
