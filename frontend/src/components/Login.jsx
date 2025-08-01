@@ -1,7 +1,7 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import API from '../api.js';
 
-export default function Login({ onLogin }){
+export default function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -14,11 +14,17 @@ export default function Login({ onLogin }){
     
     try {
       console.log('Attempting login with:', { email, password: '***' });
+      console.log('API baseURL:', API.defaults.baseURL);
+      console.log('Full login URL:', API.defaults.baseURL + '/auth/login');
+      
       const { data } = await API.post('/auth/login', { email, password });
       console.log('Login successful');
       onLogin(data.token);
     } catch (err) {
       console.error('Login error:', err);
+      console.error('Error response:', err.response);
+      console.error('Error status:', err.response?.status);
+      console.error('Error data:', err.response?.data);
       setError(err.response?.data?.error || 'Invalid credentials');
     } finally {
       setLoading(false);

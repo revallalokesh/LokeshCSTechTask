@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Login from './components/Login.jsx';
 import Dashboard from './components/Dashboard.jsx';
-import { setToken } from './api.js';
+import { setToken, testAPI, testLogin } from './api.js';
+
+// Global test functions for debugging
+window.testAPI = testAPI;
+window.testLogin = testLogin;
 
 export default function App() {
   const [token, setTok] = useState(localStorage.getItem('token'));

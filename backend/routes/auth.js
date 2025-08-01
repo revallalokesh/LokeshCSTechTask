@@ -106,4 +106,18 @@ router.get('/list-users', async (req, res) => {
   }
 });
 
+// Check admin user exists
+router.get('/check-admin', async (req, res) => {
+  try {
+    const admin = await User.findOne({ email: 'admin@example.com' });
+    res.json({ 
+      adminExists: !!admin,
+      message: admin ? 'Admin user exists' : 'Admin user not found'
+    });
+  } catch (err) {
+    console.error('Error checking admin:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
